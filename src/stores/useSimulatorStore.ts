@@ -1,25 +1,42 @@
 import { create } from 'zustand';
 
-// Define a "forma" dos dados do nosso formulário
+// A "forma" do nosso objeto de validação agora guarda mensagens de erro
+type ValidationStatus = {
+  fullNameError: string | null;
+  cpfError: string | null;
+  emailError: string | null;
+  phoneError: string | null;
+  stateError: string | null;
+  // --- CAMPOS ADICIONADOS ---
+  birthDateError: string | null;
+  genderError: string | null;
+  incomeError: string | null;
+  professionError: string | null;
+};
+
 type FormData = {
   fullName: string;
-  // --- CAMPOS ADICIONADOS ---
   cpf: string;
   email: string;
   phone: string;
-  state: string; // Para o UF (ex: 'SP')
+  state: string;
   consent: boolean;
-  // --- FIM DA ADIÇÃO ---
+   // --- CAMPOS ADICIONADOS ---
+  birthDate: string;
+  gender: string;
+  income: string;
+  profession: string; // Armazenará o CBO da profissão
 };
 
-// Define a "forma" completa da nossa store: o estado e as ações
 type SimulatorState = {
   currentStep: number;
   formData: FormData;
+  validationStatus: ValidationStatus; // Atualizado
   actions: {
     nextStep: () => void;
     prevStep: () => void;
     setFormData: (data: Partial<FormData>) => void;
+    setValidationStatus: (status: Partial<ValidationStatus>) => void;
     goToStep: (step: number) => void;
     reset: () => void;
   }
@@ -29,17 +46,32 @@ const initialState = {
   currentStep: 1,
   formData: {
     fullName: "",
-    // --- VALORES INICIAIS ADICIONADOS ---
     cpf: "",
     email: "",
     phone: "",
     state: "",
     consent: false,
-    // --- FIM DA ADIÇÃO ---
+     // --- VALORES INICIAIS ADICIONADOS ---
+    birthDate: "",
+    gender: "",
+    income: "",
+    profession: "",
+  },
+  // Estado inicial para a validação (null significa sem erro)
+  validationStatus: {
+    fullNameError: null,
+    cpfError: null,
+    emailError: null,
+    phoneError: null,
+    stateError: null,
+    // --- VALORES INICIAIS ADICIONADOS ---
+    birthDateError: null,
+    genderError: null,
+    incomeError: null,
+    professionError: null,
   },
 };
 
-// Cria a store com o Zustand
 export const useSimulatorStore = create<SimulatorState>((set) => ({
   ...initialState,
   actions: {
@@ -48,6 +80,9 @@ export const useSimulatorStore = create<SimulatorState>((set) => ({
     goToStep: (step) => set({ currentStep: step }),
     setFormData: (data) => set((state) => ({ 
       formData: { ...state.formData, ...data } 
+    })),
+    setValidationStatus: (status) => set((state) => ({
+      validationStatus: { ...state.validationStatus, ...status }
     })),
     reset: () => set(initialState),
   }

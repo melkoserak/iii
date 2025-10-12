@@ -2,7 +2,7 @@
 import { ArrowLeft, ArrowRight } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { useSimulatorStore } from '@/stores/useSimulatorStore';
-// A importação do 'shallow' foi removida
+import { useRouter } from 'next/navigation'; // 1. Importe o useRouter
 
 type NavigationButtonsProps = {
   isNextDisabled?: boolean;
@@ -13,10 +13,15 @@ export const NavigationButtons = ({
   isNextDisabled = false,
   nextLabel = "Próximo" 
 }: NavigationButtonsProps) => {
-  // --- INÍCIO DA CORREÇÃO DEFINITIVA ---
   const currentStep = useSimulatorStore((state) => state.currentStep);
-  const prevStep = useSimulatorStore((state) => state.actions.prevStep);
-  // --- FIM DA CORREÇÃO ---
+  const router = useRouter(); // 2. Inicialize o roteador
+
+  // 3. Crie a função para voltar
+  const handleBack = () => {
+    if (currentStep > 1) {
+      router.push(`/simulador/${currentStep - 1}`);
+    }
+  };
 
   const showBackButton = currentStep > 1;
 
@@ -26,7 +31,7 @@ export const NavigationButtons = ({
         <Button
           type="button"
           variant="ghost"
-          onClick={prevStep}
+          onClick={handleBack} // 4. Use a nova função aqui
         >
           <ArrowLeft className="mr-2 h-4 w-4" />
           Voltar

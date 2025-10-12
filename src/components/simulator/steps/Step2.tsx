@@ -1,30 +1,56 @@
 "use client";
+import React, { useEffect, useState } from 'react';
 import { NavigationButtons } from '../NavigationButtons';
 import { useSimulatorStore } from '@/stores/useSimulatorStore';
-import { IMaskInput } from 'react-imask';
+import { IMaskMixin } from 'react-imask';
 import { Autocomplete } from '@/components/ui/autocomplete';
+import { Input } from '@/components/ui/input';
+import { Check } from 'lucide-react';
+import { useRouter } from 'next/navigation'; // 1. Importe o useRouter
+
+const MaskedInput = IMaskMixin(({ inputRef, ...props }) => (
+  <Input {...props} ref={inputRef as React.Ref<HTMLInputElement>} />
+));
 
 export const Step2 = () => {
-  // --- INÍCIO DA CORREÇÃO DEFINITIVA ---
-  // Selecionamos os dados (que mudam) e as ações (que são estáticas) em chamadas separadas.
-  // Isso elimina o aviso de loop infinito da forma mais correta.
+    const router = useRouter(); // 2. Inicialize o roteador
   const formData = useSimulatorStore((state) => state.formData);
-  const { setFormData, nextStep } = useSimulatorStore((state) => state.actions);
-  // --- FIM DA CORREÇÃO ---
-  
+  const currentStep = useSimulatorStore((state) => state.currentStep);
+  const validationStatus = useSimulatorStore((state) => state.validationStatus);
+  const { setFormData, nextStep, setValidationStatus } = useSimulatorStore((state) => state.actions);
+
+  const { cpf, email, phone, state, consent } = formData;
+  const { cpfError, emailError, phoneError, stateError } = validationStatus;
   const firstName = formData.fullName.split(' ')[0] || "";
 
-  const isFormValid = 
-    formData.cpf.length > 0 && 
-    formData.email.includes('@') &&
-    formData.phone.length > 0 &&
-    formData.state !== "" &&
-    formData.consent === true;
+  const [touched, setTouched] = useState({
+    cpf: false,
+    email: false,
+    phone: false,
+  });
 
+  const handleBlur = (field: keyof typeof touched) => {
+    setTouched(prev => ({ ...prev, [field]: true }));
+  };
+
+  useEffect(() => {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    setValidationStatus({
+      cpfError: cpf.replace(/[._-]/g, '').length === 11 ? null : "CPF inválido.",
+      emailError: emailRegex.test(email) ? null : "E-mail inválido.",
+      phoneError: phone.replace(/[()-\s]/g, '').length >= 10 ? null : "Celular inválido.",
+      stateError: state ? null : "Selecione um estado.",
+    });
+  }, [cpf, email, phone, state, setValidationStatus]);
+
+  const isFormValid = !cpfError && !emailError && !phoneError && !stateError && consent;
+
+   // --- CORREÇÃO APLICADA AQUI ---
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isFormValid) {
-      nextStep();
+      // 3. Use o router para navegar para a próxima URL
+      router.push(`/simulador/${currentStep + 1}`);
     }
   };
 
@@ -54,49 +80,60 @@ export const Step2 = () => {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label htmlFor="cpf" className="block text-sm font-bold text-gray-600 mb-1">Seu CPF <span className="text-red-500">*</span></label>
-          <input type="text" id="cpf" value={formData.cpf} onChange={(e) => setFormData({ cpf: e.target.value })}
-            className="w-full h-12 px-4 py-3 bg-white border border-border rounded-md focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="000.000.000-00" required />
+          <div className="relative flex items-center">
+            <MaskedInput mask="000.000.000-00" id="cpf" value={cpf} 
+              onAccept={(v: any) => setFormData({ cpf: v })} 
+              onBlur={() => handleBlur('cpf')}
+              className={`h-12 px-4 py-3 pr-10 ${touched.cpf && cpfError ? 'border-destructive' : ''}`} 
+              placeholder="000.000.000-00" required />
+            {!cpfError && cpf && <Check className="absolute right-3 h-5 w-5 text-green-500" />}
+          </div>
+          {touched.cpf && cpfError && <p className="text-sm text-destructive mt-1">{cpfError}</p>}
         </div>
+
         <div>
           <label htmlFor="email" className="block text-sm font-bold text-gray-600 mb-1">E-mail <span className="text-red-500">*</span></label>
-          <input type="email" id="email" value={formData.email} onChange={(e) => setFormData({ email: e.target.value })}
-            className="w-full h-12 px-4 py-3 bg-white border border-border rounded-md focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="seu.melhor.email@exemplo.com" required />
+          <div className="relative flex items-center">
+            <Input type="email" id="email" value={email} 
+              onChange={(e) => setFormData({ email: e.target.value })}
+              onBlur={() => handleBlur('email')}
+              className={`h-12 px-4 py-3 pr-10 ${touched.email && emailError ? 'border-destructive' : ''}`} 
+              placeholder="seu.melhor.email@exemplo.com" required />
+            {!emailError && email && <Check className="absolute right-3 h-5 w-5 text-green-500" />}
+          </div>
+          {touched.email && emailError && <p className="text-sm text-destructive mt-1">{emailError}</p>}
         </div>
+
         <div>
           <label htmlFor="phone" className="block text-sm font-bold text-gray-600 mb-1">Nº de Celular (DDD) <span className="text-red-500">*</span></label>
-          <IMaskInput
-            mask="(00) 00000-0000"
-            id="phone"
-            value={formData.phone}
-            onAccept={(value) => setFormData({ phone: value as string })}
-            className="w-full h-12 px-4 py-3 bg-white border border-border rounded-md focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-            placeholder="(XX) XXXXX-XXXX"
-            required
-          />
+          <div className="relative flex items-center">
+            <MaskedInput mask="(00) 00000-0000" id="phone" value={phone} 
+              onAccept={(v: any) => setFormData({ phone: v })}
+              onBlur={() => handleBlur('phone')}
+              className={`h-12 px-4 py-3 pr-10 ${touched.phone && phoneError ? 'border-destructive' : ''}`} 
+              placeholder="(XX) XXXXX-XXXX" required />
+            {!phoneError && phone && <Check className="absolute right-3 h-5 w-5 text-green-500" />}
+          </div>
+          {touched.phone && phoneError && <p className="text-sm text-destructive mt-1">{phoneError}</p>}
         </div>
         
         <div>
           <label className="block text-sm font-bold text-gray-600 mb-1">Estado <span className="text-red-500">*</span></label>
-          <Autocomplete 
-            options={brazilianStates}
-            value={formData.state}
-            onChange={(value) => setFormData({ state: value })}
-            placeholder="Selecione o estado..."
-          />
+          <div className="relative flex items-center">
+            <Autocomplete options={brazilianStates} value={state} onChange={(v) => setFormData({ state: v })} placeholder="Selecione o estado..." />
+            {!stateError && state && <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500 pointer-events-none" />}
+          </div>
         </div>
 
-        <div className="md:col-span-2 flex items-center gap-3">
-          <input type="checkbox" id="consent" checked={formData.consent} onChange={(e) => setFormData({ consent: e.target.checked })}
-            className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary" required />
+        <div className="md:col-span-2 flex items-center justify-end gap-3">
           <label htmlFor="consent" className="text-sm text-gray-600">
             Li e aceito os <a href="/termos-de-uso" target="_blank" className="text-primary hover:underline">Termos</a> e <a href="/politica-de-privacidade" target="_blank" className="text-primary hover:underline">Política de Privacidade</a>. <span className="text-red-500">*</span>
           </label>
+          <input type="checkbox" id="consent" checked={consent} onChange={(e) => setFormData({ consent: e.target.checked })}
+            className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary" required />
         </div>
       </div>
-
       <NavigationButtons isNextDisabled={!isFormValid} />
     </form>
   );
-};
+}; // <<< --- ESTA CHAVE ESTAVA FALTANDO

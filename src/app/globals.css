@@ -4,35 +4,35 @@
 
 @layer base {
   :root {
-    /* Estas são as suas cores personalizadas convertidas para o formato HSL 
-       que a shadcn/ui utiliza. Você só precisa mexer aqui para mudar o tema. */
-    --background: 220 13% 96%; /* #F0F2F5 - Cinza claro do fundo */
-    --foreground: 0 0% 15%;   /* #252525 - Cor de texto principal */
+    /* Suas cores personalizadas agora em formato HEX */
+    --background: #F0F2F5; /* Cinza claro do fundo */
+    --foreground: #252525;   /* Cor de texto principal */
     
-    --card: 0 0% 100%;
-    --card-foreground: 0 0% 15%;
+    --card: #FFFFFF;
+    --card-foreground: #252525;
  
-    --popover: 0 0% 100%;
-    --popover-foreground: 0 0% 15%;
+    --popover: #FFFFFF;
+    --popover-foreground: #252525;
  
-    --primary: 217 97% 46%; /* #0266e8 - Seu Azul Primário */
-    --primary-foreground: 0 0% 100%; /* #ffffff - Branco para textos sobre o azul */
+    --primary: #0266e8; /* Seu Azul Primário */
+    --primary-foreground: #FFFFFF; /* Branco para textos sobre o azul */
  
-    --secondary: 46 100% 47%; /* #efb700 - Seu Amarelo Secundário */
-    --secondary-foreground: 0 0% 15%; /* Cor de texto para o amarelo */
+    --secondary: #efb700; /* Seu Amarelo Secundário */
+    --secondary-foreground: #252525; /* Cor de texto para o amarelo */
  
-    --muted: 220 13% 91%;
-    --muted-foreground: 220 9% 45%;
+    --muted: #E9EBF0;
+    --muted-foreground: #71717A;
  
-    --accent: 220 13% 91%;
-    --accent-foreground: 220 9% 25%;
+    /* Esta é a cor que corrigimos para o hover */
+    --accent: #E9EBF0;
+    --accent-foreground: #3F3F46;
  
-    --destructive: 0 84% 60%;
-    --destructive-foreground: 0 0% 100%;
+    --destructive: #DC2626;
+    --destructive-foreground: #FFFFFF;
 
-    --border: 0 0% 88%; /* #e0e0e0 - Sua cor de borda */
-    --input: 0 0% 88%;
-    --ring: 217 97% 46%; /* A cor do anel de foco, usando seu azul primário */
+    --border: #e0e0e0; /* Sua cor de borda */
+    --input: #e0e0e0;
+    --ring: #0266e8; /* A cor do anel de foco, usando seu azul primário */
  
     --radius: 0.5rem;
   }

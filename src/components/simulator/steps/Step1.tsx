@@ -1,19 +1,34 @@
 "use client";
+import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation'; // 1. Importe o useRouter
 import { NavigationButtons } from '../NavigationButtons';
 import { useSimulatorStore } from '@/stores/useSimulatorStore';
-// A importação do 'shallow' foi removida
+import { Input } from '@/components/ui/input';
+import { Check } from 'lucide-react';
 
 export const Step1 = () => {
-  // --- INÍCIO DA CORREÇÃO DEFINITIVA ---
-  // Selecionamos os dados e as ações em chamadas separadas.
+  const router = useRouter(); // 2. Inicialize o roteador
   const fullName = useSimulatorStore((state) => state.formData.fullName);
-  const { setFormData, nextStep } = useSimulatorStore((state) => state.actions);
-  // --- FIM DA CORREÇÃO ---
+  const fullNameError = useSimulatorStore((state) => state.validationStatus.fullNameError);
+  const currentStep = useSimulatorStore((state) => state.currentStep);
+  const { setFormData, setValidationStatus } = useSimulatorStore((state) => state.actions);
 
+  const [isTouched, setIsTouched] = useState(false);
+  const isFullNameValid = !fullNameError && fullName.length > 0;
+
+  useEffect(() => {
+    if (isTouched) {
+      const isValid = fullName.trim().includes(' ') && fullName.trim().split(' ').length > 1;
+      setValidationStatus({ fullNameError: isValid ? null : "Por favor, digite seu nome completo." });
+    }
+  }, [fullName, setValidationStatus, isTouched]);
+
+  // --- CORREÇÃO APLICADA AQUI ---
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (fullName.trim()) {
-      nextStep();
+    if (isFullNameValid) {
+      // 3. Use o router para navegar para a próxima URL
+      router.push(`/simulador/${currentStep + 1}`);
     }
   };
 
@@ -24,18 +39,25 @@ export const Step1 = () => {
         <label htmlFor="fullName" className="block text-sm font-bold text-gray-600 mb-1">
           Nome completo <span className="text-red-500">*</span>
         </label>
-        <input
-          type="text"
-          id="fullName"
-          name="fullName"
-          value={fullName}
-          onChange={(e) => setFormData({ fullName: e.target.value })}
-          className="w-full h-12 px-4 py-3 bg-white border border-border rounded-md transition-colors focus:border-primary focus:outline-none focus:ring-2 focus:ring-primary/20"
-          placeholder="Seu nome completo"
-          required
-        />
+        <div className="relative flex items-center">
+          <Input
+            type="text"
+            id="fullName"
+            name="fullName"
+            value={fullName}
+            onChange={(e) => setFormData({ fullName: e.target.value })}
+            onBlur={() => setIsTouched(true)}
+            className={`h-12 px-4 py-3 pr-10 ${fullNameError && isTouched ? 'border-destructive' : ''}`}
+            placeholder="Seu nome completo"
+            required
+          />
+          {isFullNameValid && isTouched && (
+             <Check className="absolute right-3 h-5 w-5 text-green-500" />
+          )}
+        </div>
+        {fullNameError && isTouched && <p className="text-sm text-destructive mt-1">{fullNameError}</p>}
       </div>
-      <NavigationButtons isNextDisabled={!fullName.trim()} />
+      <NavigationButtons isNextDisabled={!isFullNameValid} />
     </form>
   );
 };

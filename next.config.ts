@@ -1,21 +1,19 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   // Adiciona a configuração de "rewrites" para atuar como proxy.
-  // Isso redireciona as chamadas do frontend local para a API REST do seu site.
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        destination: 'https://www.goldenbearseguros.com.br/simulador_mag_militar/wp-json/:path*',
+        // --- CORREÇÃO APLICADA AQUI ---
+        // Adicionado o caminho correto para a sua API customizada
+        destination: 'https://www.goldenbearseguros.com.br/wp-json/mag-simulator/v1/:path*',
       },
     ];
   },
 
-  // Necessário para poder gerar os arquivos estáticos para o seu servidor atual
+  // ... (o resto da sua configuração continua a mesma)
   output: 'export',
-
-  // Desativa o modo estrito do React para evitar renderizações duplicadas em desenvolvimento
-  // (ajuda a evitar chamadas duplicadas à API durante os testes)
   reactStrictMode: false,
 };
 
