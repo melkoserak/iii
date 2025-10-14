@@ -1,19 +1,22 @@
+// next.config.ts
+
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Adiciona a configuração de "rewrites" para atuar como proxy.
+  // A configuração de "rewrites" pode ser removida ou mantida
+  // apenas para facilitar o desenvolvimento local.
   async rewrites() {
     return [
       {
         source: '/api/:path*',
-        // --- CORREÇÃO APLICADA AQUI ---
-        // Adicionado o caminho correto para a sua API customizada
         destination: 'https://www.goldenbearseguros.com.br/wp-json/mag-simulator/v1/:path*',
       },
     ];
   },
 
-  // ... (o resto da sua configuração continua a mesma)
+  // Esta é a linha mais importante para o seu caso!
   output: 'export',
+  
+  // Manter reactStrictMode como false se necessário
   reactStrictMode: false,
 };
 

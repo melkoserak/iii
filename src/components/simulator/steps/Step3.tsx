@@ -1,3 +1,4 @@
+// src/components/simulator/steps/Step3.tsx
 "use client";
 import React, { useEffect, useState } from 'react';
 import { NavigationButtons } from '../NavigationButtons';
@@ -6,14 +7,15 @@ import { Autocomplete } from '@/components/ui/autocomplete';
 import { Input } from '@/components/ui/input';
 import { getProfessions, ProfessionOption } from '@/services/apiService';
 import { Check } from 'lucide-react';
+import { event as gtmEvent } from '@/lib/gtm'; // 1. Importe a função de evento do GTM
+import { track } from '@/lib/tracking';
 
 export const Step3 = () => {
-  const formData = useSimulatorStore((state) => state.formData);
-  const validationStatus = useSimulatorStore((state) => state.validationStatus);
-  const { setFormData, nextStep, setValidationStatus } = useSimulatorStore((state) => state.actions);
-  
-  // --- INÍCIO DA CORREÇÃO ---
-  // Declaração dos estados que estavam faltando
+  // --- Seleção Otimizada para evitar loops ---
+  const { birthDate, gender, income, profession, fullName } = useSimulatorStore((state) => state.formData);
+  const { birthDateError, genderError, incomeError, professionError } = useSimulatorStore((state) => state.validationStatus);
+  const { setFormData, setValidationStatus, nextStep } = useSimulatorStore((state) => state.actions);
+
   const [professions, setProfessions] = useState<ProfessionOption[]>([]);
   const [isLoadingProfessions, setIsLoadingProfessions] = useState(true);
   
@@ -24,37 +26,48 @@ export const Step3 = () => {
     profession: false,
   });
 
-  // Declaração da função que estava faltando
   const handleBlur = (field: keyof typeof touchedFields) => {
     setTouchedFields(prev => ({ ...prev, [field]: true }));
   };
-  // --- FIM DA CORREÇÃO ---
 
-  const firstName = formData.fullName.split(' ')[0] || "";
+  const firstName = fullName.split(' ')[0] || "";
 
-  // Busca as profissões quando o componente é montado
-   useEffect(() => {
+  useEffect(() => {
     const loadProfessions = async () => {
-      setIsLoadingProfessions(true); // Inicia o estado de carregamento
+      setIsLoadingProfessions(true);
       const data = await getProfessions();
       setProfessions(data);
-      setIsLoadingProfessions(false); // Finaliza o estado de carregamento
+      setIsLoadingProfessions(false);
     };
     loadProfessions();
   }, []);
-
-  const handleInputChange = (field: keyof typeof formData, value: string) => {
-    setFormData({ [field]: value });
-    // Validação simples
-    const errorField = `${field}Error` as keyof typeof validationStatus;
-    setValidationStatus({ [errorField]: value.trim() ? null : 'Campo obrigatório' });
-  };
   
-  const isFormValid = !validationStatus.birthDateError && !validationStatus.genderError && !validationStatus.incomeError && !validationStatus.professionError;
+  useEffect(() => {
+    setValidationStatus({
+      birthDateError: birthDate ? null : 'Campo obrigatório',
+      genderError: gender ? null : 'Campo obrigatório',
+      incomeError: income ? null : 'Campo obrigatório',
+      professionError: profession ? null : 'Campo obrigatório',
+    });
+  }, [birthDate, gender, income, profession, setValidationStatus]);
+
+  const isFormValid = !birthDateError && !genderError && !incomeError && !professionError;
   
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
-    if (isFormValid) nextStep();
+    if (isFormValid) {
+      track('step_complete', {
+        step: 3,
+        step_name: 'Detalhes da Simulação',
+        form_data: {
+          income_bracket: income,       // Envia o valor (ex: "5000")
+          profession_code: profession,  // Envia o código CBO (ex: "010105")
+        },
+      });
+      nextStep();
+    } else {
+      setTouchedFields({ birthDate: true, gender: true, income: true, profession: true });
+    }
   };
 
   const incomeOptions = [
@@ -67,54 +80,62 @@ export const Step3 = () => {
 
   return (
     <form onSubmit={handleSubmit} className="animate-fade-in">
-      <h3 className="text-2xl font-medium text-center mb-8 text-foreground">
+      {/* 3. Adicione o tabIndex para acessibilidade */}
+      <h3 tabIndex={-1} className="text-2xl font-medium text-left mb-8 text-foreground outline-none">
         Perfeito {firstName}! Só mais alguns detalhes para a simulação:
       </h3>
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
         <div>
           <label htmlFor="birthDate" className="block text-sm font-bold text-gray-600 mb-1">Data de Nascimento <span className="text-red-500">*</span></label>
           <div className="relative flex items-center">
-            <Input type="date" id="birthDate" value={formData.birthDate} 
-              onChange={(e) => handleInputChange('birthDate', e.target.value)} 
-              className="h-12 px-4 py-3" required />
+            <Input type="date" id="birthDate" value={birthDate} 
+              onChange={(e) => setFormData({ birthDate: e.target.value })} 
+              onBlur={() => handleBlur('birthDate')}
+              className={`h-12 px-4 py-3 ${touchedFields.birthDate && birthDateError ? 'border-destructive' : ''}`} required />
           </div>
+          {touchedFields.birthDate && birthDateError && <p className="text-sm text-destructive mt-1">{birthDateError}</p>}
         </div>
         
         <div>
           <label className="block text-sm font-bold text-gray-600 mb-1">Sexo <span className="text-red-500">*</span></label>
-          <div className="flex gap-4 mt-2">
+          <div className="flex gap-4 mt-2" onBlur={() => handleBlur('gender')}>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" name="gender" value="masculino" checked={formData.gender === 'masculino'} 
-                onChange={(e) => handleInputChange('gender', e.target.value)} className="h-4 w-4 text-primary focus:ring-primary" /> Masculino
+              <input type="radio" name="gender" value="masculino" checked={gender === 'masculino'} 
+                onChange={(e) => setFormData({ gender: e.target.value })} className="h-4 w-4 text-primary focus:ring-primary" /> Masculino
             </label>
             <label className="flex items-center gap-2 cursor-pointer">
-              <input type="radio" name="gender" value="feminino" checked={formData.gender === 'feminino'} 
-                onChange={(e) => handleInputChange('gender', e.target.value)} className="h-4 w-4 text-primary focus:ring-primary" /> Feminino
+              <input type="radio" name="gender" value="feminino" checked={gender === 'feminino'} 
+                onChange={(e) => setFormData({ gender: e.target.value })} className="h-4 w-4 text-primary focus:ring-primary" /> Feminino
             </label>
           </div>
+           {touchedFields.gender && genderError && <p className="text-sm text-destructive mt-1">{genderError}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-bold text-gray-600 mb-1">Faixa de Renda Mensal <span className="text-red-500">*</span></label>
-          <Autocomplete options={incomeOptions} value={formData.income} 
-            onChange={(value) => handleInputChange('income', value)} placeholder="Selecione..." />
+          <div onBlur={() => handleBlur('income')}>
+            <Autocomplete options={incomeOptions} value={income} 
+              onChange={(value) => setFormData({ income: value })} 
+              className={`${touchedFields.income && incomeError ? 'border-destructive' : ''}`}
+              placeholder="Selecione..." />
+          </div>
+          {touchedFields.income && incomeError && <p className="text-sm text-destructive mt-1">{incomeError}</p>}
         </div>
 
         <div>
           <label className="block text-sm font-bold text-gray-600 mb-1">Profissão <span className="text-red-500">*</span></label>
           <div className="relative flex items-center" onBlur={() => handleBlur('profession')}>
-            {/* --- ATUALIZAÇÃO APLICADA --- */}
             <Autocomplete 
               options={professions} 
-              value={formData.profession} 
+              value={profession} 
               onChange={(value) => setFormData({ profession: value })} 
               placeholder={isLoadingProfessions ? "Carregando profissões..." : "Digite para buscar..."}
-              isLoading={isLoadingProfessions} // Passa o estado para o componente
-              className={`${validationStatus.professionError && touchedFields.profession ? 'border-destructive' : ''}`} 
+              isLoading={isLoadingProfessions}
+              className={`${touchedFields.profession && professionError ? 'border-destructive' : ''}`} 
             />
-            {!validationStatus.professionError && formData.profession && <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500 pointer-events-none" />}
+            {!professionError && profession && <Check className="absolute right-3 top-1/2 -translate-y-1/2 h-5 w-5 text-green-500 pointer-events-none" />}
           </div>
-          {validationStatus.professionError && touchedFields.profession && <p className="text-sm text-destructive mt-1">{validationStatus.professionError}</p>}
+          {touchedFields.profession && professionError && <p className="text-sm text-destructive mt-1">{professionError}</p>}
         </div>
       </div>
       <NavigationButtons isNextDisabled={!isFormValid} nextLabel="Ver Opções de Seguro →" />

@@ -1,3 +1,4 @@
+// src/components/simulator/steps/Step2.tsx
 "use client";
 import React, { useEffect, useState } from 'react';
 import { NavigationButtons } from '../NavigationButtons';
@@ -5,23 +6,25 @@ import { useSimulatorStore } from '@/stores/useSimulatorStore';
 import { IMaskMixin } from 'react-imask';
 import { Autocomplete } from '@/components/ui/autocomplete';
 import { Input } from '@/components/ui/input';
-import { Check } from 'lucide-react';
-import { useRouter } from 'next/navigation'; // 1. Importe o useRouter
+import { Check } from 'lucide-react';   
+import { track } from '@/lib/tracking';
+
 
 const MaskedInput = IMaskMixin(({ inputRef, ...props }) => (
   <Input {...props} ref={inputRef as React.Ref<HTMLInputElement>} />
 ));
 
 export const Step2 = () => {
-    const router = useRouter(); // 2. Inicialize o roteador
-  const formData = useSimulatorStore((state) => state.formData);
-  const currentStep = useSimulatorStore((state) => state.currentStep);
-  const validationStatus = useSimulatorStore((state) => state.validationStatus);
-  const { setFormData, nextStep, setValidationStatus } = useSimulatorStore((state) => state.actions);
+  // --- INÍCIO DA CORREÇÃO ---
+  // 1. Selecionamos os dados que o componente realmente precisa, um por um.
+  const { cpf, email, phone, state, consent, fullName } = useSimulatorStore((state) => state.formData);
+  const { cpfError, emailError, phoneError, stateError } = useSimulatorStore((state) => state.validationStatus);
 
-  const { cpf, email, phone, state, consent } = formData;
-  const { cpfError, emailError, phoneError, stateError } = validationStatus;
-  const firstName = formData.fullName.split(' ')[0] || "";
+  // 2. Selecionamos as ações (que são estáveis) separadamente.
+  const { setFormData, setValidationStatus, nextStep } = useSimulatorStore((state) => state.actions);
+  // --- FIM DA CORREÇÃO ---
+
+  const firstName = fullName.split(' ')[0] || "";
 
   const [touched, setTouched] = useState({
     cpf: false,
@@ -45,12 +48,19 @@ export const Step2 = () => {
 
   const isFormValid = !cpfError && !emailError && !phoneError && !stateError && consent;
 
-   // --- CORREÇÃO APLICADA AQUI ---
-  const handleSubmit = (e: React.FormEvent) => {
+ const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isFormValid) {
-      // 3. Use o router para navegar para a próxima URL
-      router.push(`/simulador/${currentStep + 1}`);
+      track('step_complete', {
+        step: 2,
+        step_name: 'Dados de Contato',
+        form_data: {
+          state: state, // Envia a sigla do estado (ex: "SP")
+        },
+      });
+      nextStep(); // Apenas avança o estado
+    } else {
+      setTouched({ cpf: true, email: true, phone: true });
     }
   };
 
@@ -73,7 +83,7 @@ export const Step2 = () => {
 
   return (
     <form onSubmit={handleSubmit} className="animate-fade-in">
-      <h3 className="text-2xl font-medium text-center mb-8 text-foreground">
+      <h3 tabIndex={-1} className="text-2xl font-medium text-left mb-8 text-foreground outline-none">
         Certo {firstName}, agora precisamos destes dados de contato:
       </h3>
       
@@ -125,15 +135,15 @@ export const Step2 = () => {
           </div>
         </div>
 
-        <div className="md:col-span-2 flex items-center justify-end gap-3">
-          <label htmlFor="consent" className="text-sm text-gray-600">
-            Li e aceito os <a href="/termos-de-uso" target="_blank" className="text-primary hover:underline">Termos</a> e <a href="/politica-de-privacidade" target="_blank" className="text-primary hover:underline">Política de Privacidade</a>. <span className="text-red-500">*</span>
-          </label>
+        <div className="md:col-span-2 flex items-center justify-end gap-3">       
           <input type="checkbox" id="consent" checked={consent} onChange={(e) => setFormData({ consent: e.target.checked })}
             className="h-5 w-5 rounded border-gray-300 text-primary focus:ring-primary" required />
+            <label htmlFor="consent" className="text-sm text-gray-600">
+            Li e aceito os <a href="/termos-de-uso" target="_blank" className="text-primary hover:underline">Termos</a> e <a href="/politica-de-privacidade" target="_blank" className="text-primary hover:underline">Política de Privacidade</a>. <span className="text-red-500">*</span>
+          </label>
         </div>
       </div>
       <NavigationButtons isNextDisabled={!isFormValid} />
     </form>
   );
-}; // <<< --- ESTA CHAVE ESTAVA FALTANDO
+};
