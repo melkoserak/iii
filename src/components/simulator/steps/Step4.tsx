@@ -8,6 +8,8 @@ import { track } from '@/lib/tracking';
 import { Loader2, AlertTriangle } from 'lucide-react';
 import { CoverageCard } from './step4/CoverageCard';
 import { SummaryBar } from './step4/SummaryBar';
+import { NavigationButtons } from '../NavigationButtons'; // 1. Importe os botões
+
 
 const LoadingState = () => (
     <div className="flex flex-col items-center justify-center text-center p-10">
@@ -26,11 +28,16 @@ const ErrorState = ({ message }: { message: string }) => (
 
 export const Step4 = () => {
   const formData = useSimulatorStore((state) => state.formData);
+  const firstName = formData.fullName.split(' ')[0] || "para você"; 
   const { nextStep } = useSimulatorStore((state) => state.actions);
   
   const coverages = useCoverageStore((state) => state.coverages);
   const setInitialCoverages = useCoverageStore((state) => state.setInitialCoverages);
   const mainSusep = useCoverageStore((state) => state.mainSusep);
+
+   // --- INÍCIO DA CORREÇÃO ---
+  const totalPremium = useCoverageStore((state) => state.getTotalPremium());
+  // --- FIM DA CORREÇÃO ---
 
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -92,14 +99,14 @@ export const Step4 = () => {
   };
 
   return (
-    <form onSubmit={handleSubmit} className="animate-fade-in pb-24">
-      <h3 tabIndex={-1} className="...">
-        {isLoading ? "Aguarde um momento" : "Personalize o seu seguro ideal"}
+    // 3. Removido o padding 'pb-24' que não é mais necessário
+    <form onSubmit={handleSubmit} className="animate-fade-in">
+      <h3 tabIndex={-1} className="text-2xl font-medium text-left mb-2 text-foreground outline-none">
+        {isLoading ? "Aguarde um momento..." : `Personalize o seu seguro ideal, ${firstName}`}
       </h3>
       
-      {/* Esta parte agora irá funcionar porque 'mainSusep' será preenchido corretamente */}
       {!isLoading && mainSusep && (
-        <p className="text-center text-xs text-muted-foreground mb-8">
+        <p className="text-left text-sm text-muted-foreground mb-8">
           Produto principal (Processo SUSEP: {mainSusep})
         </p>
       )}
@@ -114,7 +121,13 @@ export const Step4 = () => {
               <CoverageCard key={coverage.id} coverage={coverage} />
             ))}
           </div>
+          
+          {/* 4. A barra de resumo e os botões agora ficam no final do formulário */}
           <SummaryBar />
+          <NavigationButtons 
+            isNextDisabled={totalPremium <= 0} 
+            nextLabel="Continuar" 
+          />
         </>
       )}
 

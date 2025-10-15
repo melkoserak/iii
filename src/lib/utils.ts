@@ -19,3 +19,28 @@ export function formatCurrency(value: number): string {
     currency: 'BRL',
   }).format(value);
 }
+
+// ADICIONE ESTA NOVA FUNÇÃO
+export function stripHtml(html: string): string {
+  if (!html) return "";
+  // Usa uma expressão regular para remover as tags HTML e decodifica entidades HTML
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+  return doc.body.textContent || "";
+}
+
+// ADICIONE ESTA NOVA FUNÇÃO
+export function sanitizeHtml(html: string): string {
+  if (!html) return "";
+  const doc = new DOMParser().parseFromString(html, 'text/html');
+
+  // Encontra TODOS os elementos dentro do HTML
+  doc.body.querySelectorAll('*').forEach((node) => {
+    // Remove o atributo 'style' de cada um
+    node.removeAttribute('style');
+    // Você também pode remover outros atributos indesejados aqui se precisar
+    // node.removeAttribute('class');
+    // node.removeAttribute('font');
+  });
+
+  return doc.body.innerHTML;
+}

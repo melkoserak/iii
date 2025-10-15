@@ -31,48 +31,58 @@ type CoverageState = {
 };
 
 const normalizeApiData = (apiData: any): { coverages: Coverage[], mainSusep: string | null } => {
-  const products = apiData?.api_response?.Valor?.simulacoes?.[0]?.produtos;
+  const products = apiData?.Valor?.simulacoes?.[0]?.produtos;
   if (!products) {
+    console.error("Estrutura da API inesperada. 'products' não encontrado.");
     return { coverages: [], mainSusep: null };
   }
 
   const preferredProduct = products.find((p: any) => p.idProduto === 2096);
   const productsToProcess = preferredProduct ? [preferredProduct] : products;
   
-  // O log prova que o SUSEP não está a chegar, então mainSusep será null, o que está correto.
   const mainSusep = productsToProcess[0]?.coberturas?.[0]?.numeroProcessoSusep || null;
 
   const allCoverages: Coverage[] = productsToProcess.flatMap(
     (product: any) =>
       product.coberturas.map((cov: any, index: number) => {
-        // --- CORREÇÕES FINAIS BASEADAS NOS SEUS LOGS ---
+        const baseCapital = parseFloat(cov.capitalBase || 0);
+        
+        // --- INÍCIO DA ALTERAÇÃO PARA O MÍNIMO DE 20 MIL ---
+        // 1. Define o mínimo da API ou o capital base.
+        const apiMinCapital = parseFloat(cov.valorMinimoCapitalContratacao) || baseCapital || 0;
+        
+        // 2. Garante que o mínimo seja de pelo menos 20.000.
+        const minCapital = Math.max(apiMinCapital, 20000);
+        // --- FIM DA ALTERAÇÃO ---
+
         return {
-          id: `${product.idProduto}-${cov.itemProdutoId || cov.descricao || index}`,
+          id: `${product.idProduto}-${cov.itemProdutoId || cov.id || cov.descricao}`,
           name: cov.descricao || "Cobertura sem nome",
-          
-          // Fallback: Como 'descricaoDigitalCurta' não vem, usamos a 'descricao' principal como um placeholder.
-          description: cov.descricaoDigitalCurta || cov.descricao || "Descrição não fornecida.", 
-          longDescription: cov.descricaoDigitalLonga || "Detalhes não fornecidos pela API.",
+          description: cov.descricaoDigitalCurta || "Descrição não fornecida.", 
+          longDescription: cov.descricaoDigitalLonga || "Detalhes não fornecidos.",
           susep: cov.numeroProcessoSusep || 'N/A',
-          
-          // O log prova que 'tipoId' existe diretamente no objeto 'cov'.
           isAdjustable: cov.tipoId === 3, 
           calculationType: cov.tipoId,
-          // --- FIM DAS CORREÇÕES ---
-          
           isMandatory: cov.obrigatoria === true,
-          minCapital: parseFloat(cov.valorMinimoCapitalContratacao || 0),
+          
+          // --- APLICA A ALTERAÇÃO AQUI ---
+          minCapital: minCapital,
+
           maxCapital: parseFloat(cov.limite || 0),
-          baseCapital: parseFloat(cov.capitalBase || 0),
+          baseCapital: baseCapital,
           basePremium: parseFloat(cov.premioBase || 0),
           isActive: cov.obrigatoria === true || true,
-          currentCapital: parseFloat(cov.capitalBase || 0),
+          
+          // Garante que o capital inicial também respeite o novo mínimo de 20.000.
+          currentCapital: Math.max(baseCapital, minCapital),
+
           originalData: cov,
         };
       })
   );
   
   const uniqueCoverages = Array.from(new Map(allCoverages.map((c: Coverage) => [c.name, c])).values());
+  console.log("DEBUG [useCoverageStore]: Dados normalizados:", { coverages: uniqueCoverages, mainSusep });
   return { coverages: uniqueCoverages, mainSusep };
 };
 

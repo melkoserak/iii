@@ -92,7 +92,7 @@ export const Step2 = () => {
           <label htmlFor="cpf" className="block text-sm font-bold text-gray-600 mb-1">Seu CPF <span className="text-red-500">*</span></label>
           <div className="relative flex items-center">
             <MaskedInput mask="000.000.000-00" id="cpf" value={cpf} 
-              onAccept={(v: any) => setFormData({ cpf: v })} 
+              onAccept={(value: string) => setFormData({ cpf: value })} 
               onBlur={() => handleBlur('cpf')}
               className={`h-12 px-4 py-3 pr-10 ${touched.cpf && cpfError ? 'border-destructive' : ''}`} 
               placeholder="000.000.000-00" required />
@@ -118,7 +118,7 @@ export const Step2 = () => {
           <label htmlFor="phone" className="block text-sm font-bold text-gray-600 mb-1">Nº de Celular (DDD) <span className="text-red-500">*</span></label>
           <div className="relative flex items-center">
             <MaskedInput mask="(00) 00000-0000" id="phone" value={phone} 
-              onAccept={(v: any) => setFormData({ phone: v })}
+               onAccept={(value: string) => setFormData({ phone: value })}
               onBlur={() => handleBlur('phone')}
               className={`h-12 px-4 py-3 pr-10 ${touched.phone && phoneError ? 'border-destructive' : ''}`} 
               placeholder="(XX) XXXXX-XXXX" required />

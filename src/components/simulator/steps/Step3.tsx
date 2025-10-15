@@ -7,7 +7,6 @@ import { Autocomplete } from '@/components/ui/autocomplete';
 import { Input } from '@/components/ui/input';
 import { getProfessions, ProfessionOption } from '@/services/apiService';
 import { Check } from 'lucide-react';
-import { event as gtmEvent } from '@/lib/gtm'; // 1. Importe a função de evento do GTM
 import { track } from '@/lib/tracking';
 
 export const Step3 = () => {

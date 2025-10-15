@@ -2,14 +2,15 @@
 "use client"; // A nossa aplicação é totalmente interativa
 
 import { SimulatorForm } from "@/components/simulator/SimulatorForm";
+import Image from 'next/image';
 
 export default function SimulatorPage() {
   return (
     <main className="flex flex-col items-center w-full p-6 gap-10">
       <header className="w-full max-w-5xl flex items-center">
-        <img src="/golden-bear-logo.png" alt="Logo Golden Bear" className="h-4 mr-3" />
-        <span className="text-sm text-[#3D3D3D]">Simulador de seguro de vida</span>
-      </header>
+    <Image src="/golden-bear-logo.png" alt="Logo Golden Bear" width={56} height={16} className="h-4 w-auto mr-3" />
+    <span className="text-sm text-[#3D3D3D]">Simulador de seguro de vida</span>
+    </header>
       <div className="w-full max-w-5xl text-left">
         <h1 className="text-2xl font-medium leading-snug text-foreground">
           Descubra o <span className="font-bold text-primary">plano ideal para você</span><br />
