@@ -49,8 +49,10 @@ export const Step10 = () => {
           // 3. Apenas definimos a URL para renderizar o iframe
           setWidgetUrl(url);
 
-        } catch (err: any) {
-          setError(err.message || 'Não foi possível carregar o ambiente de pagamento.');
+        } catch (err) {
+  const error = err as Error;
+  setError(error.message || 'Ocorreu um erro inesperado.');
+  track('simulation_error', { error_message: error.message });
           setIsLoading(false);
         }
       };
@@ -71,7 +73,7 @@ export const Step10 = () => {
                     console.log("Código de pré-autorização recebido:", preAuthCode);
                     setFormData({ paymentPreAuthCode: preAuthCode });
                 }
-            } catch (e) { /* Ignora mensagens que não são JSON */ }
+            } catch { /* Ignora mensagens que não são JSON */ }
         }
     };
     window.addEventListener('message', handleMessage);

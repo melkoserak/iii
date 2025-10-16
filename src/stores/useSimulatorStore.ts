@@ -75,10 +75,10 @@ type FormData = {
   company: string;
   isPPE: string;
   beneficiaries: Beneficiary[];
-  dpsAnswers?: any; // <-- NOVO: Para guardar as respostas do questionário (DPS)
-  reservedProposalNumber?: string; // <-- NOVO: Para guardar o número da proposta
-  paymentMethod: 'credit' | 'debit' | ''; // <-- NOVO
-  paymentPreAuthCode?: string;             // <-- NOVO (para guardar o código do widget)
+ dpsAnswers?: Record<string, unknown>; // Substitui 'any' por um tipo mais seguro
+  reservedProposalNumber?: string;
+  paymentMethod: 'credit' | 'debit' | '';
+  paymentPreAuthCode?: string;
 };
 
 type UpdateBeneficiaryData = Partial<Omit<Beneficiary, 'id' | 'legalRepresentative'>> & {
@@ -112,16 +112,15 @@ const initialState: Omit<SimulatorState, 'actions'> = {
     birthDate: "", gender: "", income: "", profession: "",
     zipCode: "", street: "", number: "", complement: "", neighborhood: "",
     city: "", maritalStatus: "", homePhone: "", rgNumber: "", rgIssuer: "",
-    rgDate: "", childrenCount: "0", company: "", isPPE: "",paymentMethod: '',                    // <-- NOVO
-    paymentPreAuthCode: undefined, 
-    
-    // A propriedade 'beneficiaries' estava faltando. Adicionada aqui.
+    rgDate: "", childrenCount: "0", company: "", isPPE: "",
+    paymentMethod: '',
+    paymentPreAuthCode: undefined,
+    dpsAnswers: undefined,
+    reservedProposalNumber: undefined,
     beneficiaries: [{
       id: Date.now().toString(),
       fullName: '', rg: '', cpf: '', birthDate: '', relationship: '',
       legalRepresentative: { fullName: '', rg: '', cpf: '', birthDate: '', relationship: '' }
-
-    
     }],
   },
   validationStatus: {
@@ -131,8 +130,7 @@ const initialState: Omit<SimulatorState, 'actions'> = {
     neighborhoodError: null, cityError: null, maritalStatusError: null,
     rgNumberError: null, rgIssuerError: null, rgDateError: null,
     childrenCountError: null, companyError: null, isPPEError: null,
-    beneficiariesError: null,  paymentMethodError: null,             // <-- NOVO
-    
+    beneficiariesError: null, paymentMethodError: null,
   },
 };
 // --- FIM DA CORREÇÃO ---

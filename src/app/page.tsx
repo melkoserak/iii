@@ -1,16 +1,24 @@
 // src/app/page.tsx
-"use client"; // A nossa aplicação é totalmente interativa
+"use client"; 
 
 import { SimulatorForm } from "@/components/simulator/SimulatorForm";
-import Image from 'next/image';
+// O import do 'Image' do Next.js não é mais necessário aqui
+
 
 export default function SimulatorPage() {
   return (
     <main className="flex flex-col items-center w-full p-6 gap-10">
       <header className="w-full max-w-5xl flex items-center">
-    <Image src="/golden-bear-logo.png" alt="Logo Golden Bear" width={56} height={16} className="h-4 w-auto mr-3" />
-    <span className="text-sm text-[#3D3D3D]">Simulador de seguro de vida</span>
-    </header>
+        {/* CORREÇÃO: Usa a tag <img> normal */}
+        <img 
+          src="/logo-golden-bear.png" // O caminho continua a ser a partir da pasta 'public'
+          alt="Logo Golden Bear" 
+          width={56} 
+          height={16} 
+          className="h-4 w-auto mr-3" 
+        />
+        <span className="text-sm text-[#3D3D3D]">Simulador de seguro de vida</span>
+      </header>
       <div className="w-full max-w-5xl text-left">
         <h1 className="text-2xl font-medium leading-snug text-foreground">
           Descubra o <span className="font-bold text-primary">plano ideal para você</span><br />

@@ -1,13 +1,12 @@
 // src/components/simulator/steps/Step9.tsx
 "use client";
 import React, { useEffect, useState, useRef, useCallback } from 'react';
-// 1. A importação correta para a versão 1.1.1
 import IframeResizer from 'iframe-resizer-react';
 import { useSimulatorStore } from '@/stores/useSimulatorStore';
 import { useCoverageStore } from '@/stores/useCoverageStore';
 import { getWidgetToken, reserveProposalNumber, getQuestionnaireToken } from '@/services/apiService';
 import { track } from '@/lib/tracking';
-import { Loader2, AlertTriangle, PartyPopper, ArrowLeft, ArrowRight } from 'lucide-react'; // 1. Importe os ícones
+import { Loader2, AlertTriangle, PartyPopper, ArrowLeft, ArrowRight } from 'lucide-react';
 import { NavigationButtons } from '../NavigationButtons';
 import { Button } from '@/components/ui/button';
 
@@ -27,7 +26,8 @@ export const Step9 = () => {
   const findFirstQuestionnaireId = useCallback(() => {
     if (!simulationDataStore || simulationDataStore.length === 0) return 'Venda';
     const firstCoverageWithQuestionnaire = simulationDataStore.find(cov => cov.originalData?.questionariosPorFaixa?.[0]?.questionarios?.[0]?.idQuestionario);
-    return firstCoverageWithQuestionnaire?.originalData.questionariosPorFaixa[0].questionarios[0].idQuestionario || 'Venda';
+    // Correção: Adicionado encadeamento opcional para evitar o erro
+    return firstCoverageWithQuestionnaire?.originalData?.questionariosPorFaixa?.[0]?.questionarios?.[0]?.idQuestionario || 'Venda';
   }, [simulationDataStore]);
 
   useEffect(() => {
@@ -44,8 +44,8 @@ export const Step9 = () => {
             track('questionnaire_complete', { questionnaire_id: data.Id });
             nextStep();
           }
-        } catch (e) {
-          console.error('Erro ao processar mensagem JSON do iframe:', e);
+        } catch {
+          console.error('Erro ao processar mensagem JSON do iframe:');
         }
       }
     };
@@ -69,9 +69,10 @@ export const Step9 = () => {
         const questionnaireId = findFirstQuestionnaireId();
         const url = `https://widgetshmg.mag.com.br/questionario-Questionario/v2/responder/${questionnaireId}/Venda/${proposalNumber}/0266e8/efb700?listenForToken=true`;
         setWidgetUrl(url);
-      } catch (err: any) {
-        setError(err.message || "Não foi possível carregar o questionário.");
-        track('questionnaire_error', { error_message: err.message });
+      } catch (err) {
+        const error = err as Error;
+        setError(error.message || "Não foi possível carregar o questionário.");
+        track('questionnaire_error', { error_message: error.message });
         setIsLoading(false);
       }
     };
@@ -95,8 +96,7 @@ export const Step9 = () => {
             Responder Novamente
           </Button>
         </div>
-
-        {/* --- INÍCIO DA CORREÇÃO --- */}
+        
         <div className="mt-8 pt-6 border-t flex justify-between items-center">
           <Button type="button" variant="ghost" onClick={prevStep}>
             <ArrowLeft className="mr-2 h-4 w-4" />
@@ -107,7 +107,6 @@ export const Step9 = () => {
             <ArrowRight className="ml-2 h-4 w-4" />
           </Button>
         </div>
-        {/* --- FIM DA CORREÇÃO --- */}
       </div>
     );
   }
@@ -126,7 +125,6 @@ export const Step9 = () => {
         {error && ( <div className="absolute inset-0 flex flex-col items-center justify-center bg-white z-10 p-4"><AlertTriangle className="h-12 w-12 text-destructive mb-4" /><p className="font-semibold text-destructive">Erro ao carregar</p><p className="text-muted-foreground text-center">{error}</p><Button onClick={resetDpsAnswers} className="mt-4">Tentar Novamente</Button></div> )}
         {widgetUrl && (
           <>
-            {/* 2. O @ts-expect-error: continua necessário para a v1 */}
             <IframeResizer
               forwardRef={iframeRef}
               key={widgetUrl}
@@ -142,8 +140,9 @@ export const Step9 = () => {
                       event: 'notify', property: 'Token', value: questionnaireToken
                     }, 'https://widgetshmg.mag.com.br');
                   }
-                } catch (e) {
-                  setError("Falha ao autenticar o questionário.");
+                } catch (err) {
+                   const error = err as Error;
+                   setError("Falha ao autenticar o questionário: " + error.message);
                 } finally {
                   setIsLoading(false);
                 }

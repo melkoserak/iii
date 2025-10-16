@@ -14,15 +14,54 @@ export interface Coverage {
   baseCapital: number;
   basePremium: number;
   calculationType: number;
-  originalData: any;
+  originalData: ApiCoverage; 
   isActive: boolean;
   currentCapital: number;
 }
 
+export interface ApiCoverage {
+  itemProdutoId?: string;
+  id?: string;
+  descricao?: string;
+  descricaoDigitalCurta?: string;
+  descricaoDigitalLonga?: string;
+  numeroProcessoSusep?: string;
+  obrigatoria?: boolean;
+  tipoId?: number;
+  valorMinimoCapitalContratacao?: string;
+  capitalBase?: string;
+  limite?: string;
+  premioBase?: string;
+  custoFixo?: string;
+  questionariosPorFaixa?: {
+      questionarios: {
+          idQuestionario: string;
+      }[];
+  }[];
+  // Adicionamos a propriedade opcional aqui
+  productId?: number;
+}
+
+interface ApiProduct {
+  idProduto: number;
+  coberturas: ApiCoverage[];
+}
+
+type ApiData = {
+  Valor?: {
+    simulacoes?: {
+      produtos?: ApiProduct[];
+    }[];
+  };
+};
+
+
+
+
 type CoverageState = {
   coverages: Coverage[];
   mainSusep: string | null;
-  setInitialCoverages: (apiData: any) => void;
+  setInitialCoverages: (apiData: ApiData) => void;
   toggleCoverage: (id: string) => void;
   updateCapital: (id: string, capital: number) => void;
   getCalculatedPremium: (coverage: Coverage) => number;
@@ -30,30 +69,24 @@ type CoverageState = {
   getTotalIndemnity: () => number;
 };
 
-const normalizeApiData = (apiData: any): { coverages: Coverage[], mainSusep: string | null } => {
+const normalizeApiData = (apiData: ApiData): { coverages: Coverage[], mainSusep: string | null } => {
   const products = apiData?.Valor?.simulacoes?.[0]?.produtos;
   if (!products) {
     console.error("Estrutura da API inesperada. 'products' não encontrado.");
     return { coverages: [], mainSusep: null };
   }
 
-  const preferredProduct = products.find((p: any) => p.idProduto === 2096);
+  const preferredProduct = products.find((p) => p.idProduto === 2096);
   const productsToProcess = preferredProduct ? [preferredProduct] : products;
   
   const mainSusep = productsToProcess[0]?.coberturas?.[0]?.numeroProcessoSusep || null;
 
   const allCoverages: Coverage[] = productsToProcess.flatMap(
-    (product: any) =>
-      product.coberturas.map((cov: any, index: number) => {
-        const baseCapital = parseFloat(cov.capitalBase || 0);
-        
-        // --- INÍCIO DA ALTERAÇÃO PARA O MÍNIMO DE 20 MIL ---
-        // 1. Define o mínimo da API ou o capital base.
-        const apiMinCapital = parseFloat(cov.valorMinimoCapitalContratacao) || baseCapital || 0;
-        
-        // 2. Garante que o mínimo seja de pelo menos 20.000.
+    (product: ApiProduct) =>
+      product.coberturas.map((cov: ApiCoverage) => {
+        const baseCapital = parseFloat(cov.capitalBase || '0');
+        const apiMinCapital = parseFloat(cov.valorMinimoCapitalContratacao || '0') || baseCapital || 0;
         const minCapital = Math.max(apiMinCapital, 20000);
-        // --- FIM DA ALTERAÇÃO ---
 
         return {
           id: `${product.idProduto}-${cov.itemProdutoId || cov.id || cov.descricao}`,
@@ -62,21 +95,17 @@ const normalizeApiData = (apiData: any): { coverages: Coverage[], mainSusep: str
           longDescription: cov.descricaoDigitalLonga || "Detalhes não fornecidos.",
           susep: cov.numeroProcessoSusep || 'N/A',
           isAdjustable: cov.tipoId === 3, 
-          calculationType: cov.tipoId,
+          calculationType: cov.tipoId || 0,
           isMandatory: cov.obrigatoria === true,
-          
-          // --- APLICA A ALTERAÇÃO AQUI ---
           minCapital: minCapital,
-
-          maxCapital: parseFloat(cov.limite || 0),
+          maxCapital: parseFloat(cov.limite || '0'),
           baseCapital: baseCapital,
-          basePremium: parseFloat(cov.premioBase || 0),
+          basePremium: parseFloat(cov.premioBase || '0'),
           isActive: cov.obrigatoria === true || true,
-          
-          // Garante que o capital inicial também respeite o novo mínimo de 20.000.
           currentCapital: Math.max(baseCapital, minCapital),
-
-          originalData: cov,
+          // --- CORREÇÃO APLICADA AQUI ---
+          // Injetamos o ID do produto no objeto originalData
+          originalData: { ...cov, productId: product.idProduto },
         };
       })
   );
@@ -97,7 +126,7 @@ export const useCoverageStore = create<CoverageState>((set, get) => ({
   updateCapital: (id, capital) => set((state) => ({ coverages: state.coverages.map((c) => c.id === id ? { ...c, currentCapital: capital } : c) })),
   getCalculatedPremium: (coverage) => {
     if (!coverage.isActive) return 0;
-    const custoFixo = parseFloat(coverage.originalData?.custoFixo || 0);
+    const custoFixo = parseFloat(coverage.originalData?.custoFixo || '0');
     if (coverage.calculationType === 3 && coverage.baseCapital > 0) {
       return custoFixo + (coverage.currentCapital / coverage.baseCapital) * coverage.basePremium;
     }

@@ -3,7 +3,8 @@
 // Tipagem para os nossos eventos
 type GTMEvent = {
   event: string;
-  [key: string]: any;
+  // Use um tipo mais específico que 'any'
+  [key: string]: string | number | boolean | undefined | null | Record<string, unknown> | Array<unknown>;
 };
 
 declare global {
@@ -12,13 +13,11 @@ declare global {
   }
 }
 
-// Função base para enviar eventos (a que já tínhamos)
+// Função base para enviar eventos
 const event = (data: GTMEvent) => {
   window.dataLayer = window.dataLayer || [];
   window.dataLayer.push(data);
 };
-
-// --- LÓGICA AVANÇADA ---
 
 // Gera ou recupera um ID de utilizador anónimo para a sessão
 const getAnonymousUserId = (): string => {
@@ -31,7 +30,7 @@ const getAnonymousUserId = (): string => {
 };
 
 // Nossa nova função de tracking principal
-export const track = (eventName: string, data: Record<string, any>) => {
+export const track = (eventName: string, data: Record<string, unknown>) => { // Corrigido aqui
   event({
     event: eventName,
     // Adiciona dados contextuais a TODOS os eventos automaticamente

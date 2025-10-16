@@ -3,9 +3,9 @@
 // Tipagem para os nossos eventos
 type GTMEvent = {
   event: string;
-  [key: string]: any; // Permite outras propriedades como 'step', 'step_name'
+  // Substitui 'any' por tipos mais específicos
+  [key: string]: string | number | boolean | undefined | null | Record<string, unknown> | Array<unknown>;
 };
-
 // Declara a `dataLayer` no objeto window para o TypeScript não reclamar
 declare global {
   interface Window {

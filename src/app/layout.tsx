@@ -1,7 +1,7 @@
 // src/app/layout.tsx
 import type { Metadata } from "next";
 import { Noto_Sans } from "next/font/google";
-import Script from 'next/script'; // Importe o componente Script
+import Script from 'next/script';
 import "./globals.css";
 
 const noto = Noto_Sans({ subsets: ["latin"], weight: ["400", "500", "700"] });
@@ -15,6 +15,8 @@ export default function RootLayout({ children }: { children: React.ReactNode; })
   const GTM_ID = 'GTM-XXXXXXX'; // <-- SUBSTITUA PELO SEU ID DO GTM
 
   return (
+    // --- CORREÇÃO APLICADA AQUI ---
+    // A propriedade 'prefetch' foi removida, pois não é válida para a tag <html>
     <html lang="pt-br">
       <head>
         <Script

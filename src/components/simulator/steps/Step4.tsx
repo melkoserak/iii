@@ -46,13 +46,14 @@ export const Step4 = () => {
   console.log("DEBUG [Step4]: A renderizar. Coberturas atuais na store:", coverages);
   console.log("DEBUG [Step4]: SUSEP principal atual na store:", mainSusep);
 
-  useEffect(() => {
+   useEffect(() => {
     track('step_view', { step: 4, step_name: 'Resultados da Simulação' });
 
     const fetchSimulation = async () => {
       setIsLoading(true);
       setError(null);
       try {
+        // --- INÍCIO DA CORREÇÃO ---
         const payload = {
           mag_nome_completo: formData.fullName,
           mag_cpf: formData.cpf,
@@ -67,19 +68,18 @@ export const Step4 = () => {
         
         track('simulation_success', { api_response_payload: data });
 
-      } catch (err: any) {
-        setError(err.message || 'Não foi possível carregar as opções. Tente novamente.');
-        track('simulation_error', { error_message: err.message });
+      } catch (err) {
+        const error = err as Error;
+        setError(error.message || 'Não foi possível carregar as opções. Tente novamente.');
+        track('simulation_error', { error_message: error.message });
       } finally {
         setIsLoading(false);
       }
     };
     
     if (coverages.length === 0) {
-      console.log("DEBUG [Step4]: 'coverages' está vazio. A iniciar chamada à API.");
       fetchSimulation();
     } else {
-      console.log("DEBUG [Step4]: 'coverages' já tem dados. A saltar chamada à API.");
       setIsLoading(false);
     }
   }, [formData, setInitialCoverages, coverages.length]);
