@@ -19,10 +19,16 @@ const getNonce = (): string => {
 
 const getRestUrl = (endpoint: string): string => {
   const settings = (window as MyWindow).mag_settings;
+  // Esta verificação garante que SEMPRE usemos a URL do WordPress quando disponível
   if (typeof window !== 'undefined' && settings?.rest_url) {
+    // A URL da API já vem completa do WordPress
     return settings.rest_url + endpoint;
   }
-  return `/api/${endpoint}`; // Fallback for local development
+
+  // O fallback agora aponta para a estrutura correta do WordPress em desenvolvimento
+  // (ajuste se a sua estrutura local for diferente)
+  console.warn("WP REST URL não encontrada. Usando fallback para /wp-json/.");
+  return `/wp-json/mag-simulator/v1/${endpoint}`;
 };
 
 

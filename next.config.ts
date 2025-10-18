@@ -1,22 +1,15 @@
-// next.config.ts
-
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // A configuração de "rewrites" pode ser removida ou mantida
-  // apenas para facilitar o desenvolvimento local.
-  async rewrites() {
-    return [
-      {
-        source: '/api/:path*',
-        destination: 'https://www.goldenbearseguros.com.br/wp-json/mag-simulator/v1/:path*',
-      },
-    ];
+  // ✅ INFORMA AO NEXT.JS ONDE OS ARQUIVOS ESTARÃO NO SERVIDOR
+  assetPrefix: '/wp-content/plugins/mag-seguro-militar-simulator/next-app/',
+
+  // Garante que os caminhos de imagem também usem o assetPrefix
+  images: {
+    unoptimized: true,
   },
 
-  // Esta é a linha mais importante para o seu caso!
   output: 'export',
-  
-  // Manter reactStrictMode como false se necessário
+
   reactStrictMode: false,
 };
 

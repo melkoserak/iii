@@ -1,8 +1,8 @@
-// src/app/layout.tsx
+// Ficheiro: src/app/layout.tsx
 import type { Metadata } from "next";
 import { Noto_Sans } from "next/font/google";
 import Script from 'next/script';
-import "./globals.css";
+import "./globals.css"; // <-- ESTA LINHA TEM DE ESTAR AQUI
 
 const noto = Noto_Sans({ subsets: ["latin"], weight: ["400", "500", "700"] });
 
