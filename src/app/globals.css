@@ -1,0 +1,59 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    /* Suas cores personalizadas agora em formato HEX */
+    --background: #F0F2F5; /* Cinza claro do fundo */
+    --foreground: #252525;   /* Cor de texto principal */
+    
+    --card: #FFFFFF;
+    --card-foreground: #252525;
+ 
+    --popover: #FFFFFF;
+    --popover-foreground: #252525;
+ 
+    --primary: #0266e8; /* Seu Azul Primário */
+    --primary-foreground: #FFFFFF; /* Branco para textos sobre o azul */
+ 
+    --secondary: #efb700; /* Seu Amarelo Secundário */
+    --secondary-foreground: #252525; /* Cor de texto para o amarelo */
+ 
+    --muted: #E9EBF0;
+    --muted-foreground: #71717A;
+ 
+    /* Esta é a cor que corrigimos para o hover */
+    --accent: #E9EBF0;
+    --accent-foreground: #3F3F46;
+ 
+    --destructive: #DC2626;
+    --destructive-foreground: #FFFFFF;
+
+    --border: #e0e0e0; /* Sua cor de borda */
+    --input: #e0e0e0;
+    --ring: #0266e8; /* A cor do anel de foco, usando seu azul primário */
+ 
+    --radius: 0.5rem;
+  }
+}
+
+/* VERSÃO CORRIGIDA E FINAL */
+@layer base {
+  * {
+    border-color: var(--border);
+  }
+  body {
+    background-color: var(--background); /* <-- CORREÇÃO AQUI */
+    color: var(--foreground);           /* <-- E AQUI */
+  }
+}
+
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus,
+input:-webkit-autofill:active {
+  -webkit-box-shadow: 0 0 0 30px white inset !important;
+  box-shadow: 0 0 0 30px white inset !important;
+  -webkit-text-fill-color: hsl(var(--foreground)) !important;
+}
