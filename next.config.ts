@@ -1,15 +1,17 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // ❌ REMOVA estas linhas durante desenvolvimento local
-  // basePath: '/wp-content/plugins/mag-seguro-militar-simulator/next-app',
-  // assetPrefix: '/wp-content/plugins/mag-seguro-militar-simulator/next-app/',
+  // 1. INFORMA AO NEXT.JS QUE O SITE ESTARÁ EM /simulador
+  basePath: '/simulador',
+  assetPrefix: '/simulador',
 
+  // 2. MANTÉM A EXPORTAÇÃO ESTÁTICA
   output: 'export',
   reactStrictMode: false,
-  
   images: {
     unoptimized: true,
   },
+
+  // 3. REMOVEMOS O PROXY (rewrites). NÃO É MAIS NECESSÁRIO.
 };
 
 module.exports = nextConfig;

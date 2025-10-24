@@ -1,7 +1,7 @@
-// src/app/page.tsx
 "use client"; 
 
 import { SimulatorForm } from "@/components/simulator/SimulatorForm";
+import Image from 'next/image'; // 1. Importe o componente Image
 
 // ✅ ADICIONE ESTA LINHA TAMBÉM
 export const dynamic = 'force-static';
@@ -10,7 +10,8 @@ export default function SimulatorPage() {
   return (
     <main className="flex flex-col items-center w-full p-6 gap-10">
       <header className="w-full max-w-5xl flex items-center">
-        <img 
+        {/* 2. Substitua <img> por <Image /> */}
+        <Image 
           src="/logo-golden-bear.png"
           alt="Logo Golden Bear" 
           width={56} 
