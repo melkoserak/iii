@@ -1,27 +1,17 @@
 // src/services/apiService.ts
+import { useSimulatorStore } from '@/stores/useSimulatorStore';
 
-// Detecta ambiente automaticamente
-const isDevelopment = typeof window !== 'undefined' && 
-  (window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1');
+// URL base da API REST do WordPress (SEU SITE ONLINE)
+const WP_API_BASE_URL = 'https://www.goldenbearseguros.com.br/wp-json/mag-simulator/v1';
+const API_BASE_URL = WP_API_BASE_URL;
 
-// URL base do proxy
-const API_BASE_URL = isDevelopment
-  ? 'https://www.goldenbearseguros.com.br/api-proxy-secure.php' // Mesmo em dev, usa produção
-  : 'https://www.goldenbearseguros.com.br/api-proxy-secure.php';
-
-// Helper para construir URLs do proxy
-const getProxyUrl = (endpoint: string): string => {
-  return `${API_BASE_URL}?endpoint=${endpoint}`;
+const getApiUrl = (endpoint: string): string => {
+  const cleanEndpoint = endpoint.startsWith('/') ? endpoint.substring(1) : endpoint;
+  return `${API_BASE_URL}/${cleanEndpoint}`;
 };
 
-// Log apenas em desenvolvimento
-const devLog = (...args: any[]) => {
-  if (isDevelopment) {
-    console.log('[API DEV]', ...args);
-  }
-};
-
-// Tipagem para as opções de profissão
+// --- INÍCIO DA ADIÇÃO ---
+// Tipagem para as opções de profissão (precisa estar definida aqui também)
 export interface ProfessionOption {
   value: string;
   label: string;
@@ -32,24 +22,36 @@ export interface ProfessionOption {
  */
 export const getProfessions = async (): Promise<ProfessionOption[]> => {
   try {
-    const response = await fetch(getProxyUrl('professions'), {
+    const nonce = useSimulatorStore.getState().wpNonce;
+    if (!nonce) {
+       console.error("Nonce não está disponível para getProfessions.");
+       // throw new Error("WordPress Nonce não encontrado.");
+    }
+    console.log(`Usando Nonce para getProfessions: ${nonce}`);
+
+    const response = await fetch(getApiUrl('professions'), { // <-- getApiUrl
       method: 'GET',
+      headers: {
+        ...(nonce && { 'X-WP-Nonce': nonce }),
+      },
       credentials: 'include',
     });
-    
+
     if (!response.ok) {
-      const error = await response.json();
-      throw new Error(error.error || 'Falha ao buscar profissões');
+      const error = await response.json().catch(() => ({ error: 'Falha ao buscar profissões e decodificar erro.' })); // Tratamento de erro aprimorado
+      throw new Error(error.error || `Falha ao buscar profissões (${response.statusText})`);
     }
-    
+
     const data: { Auxiliar: string; Descricao: string }[] = await response.json();
+    // A conversão para ProfessionOption está correta
     return data.map((prof) => ({
       value: prof.Auxiliar,
       label: prof.Descricao,
     }));
+
   } catch (error) {
-    console.error("Erro na API de profissões:", error);
-    throw error;
+     console.error("Erro na API de profissões:", error);
+     throw error; // Re-lança o erro para ser tratado onde a função for chamada
   }
 };
 
@@ -69,7 +71,7 @@ interface SimulationPayload {
  */
 export const getSimulation = async (formData: SimulationPayload) => {
   try {
-    const response = await fetch(getProxyUrl('simulation'), {
+    const response = await fetch(getApiUrl('simulation'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -129,7 +131,7 @@ export const getAddressByZipCode = async (zipCode: string): Promise<AddressData>
  */
 export const getWidgetToken = async (): Promise<{ token: string }> => {
   try {
-    const response = await fetch(getProxyUrl('widget-token'), {
+    const response = await fetch(getApiUrl('widget/token'), {
       method: 'POST',
       credentials: 'include',
     });
@@ -151,7 +153,7 @@ export const getWidgetToken = async (): Promise<{ token: string }> => {
  */
 export const reserveProposalNumber = async (token: string): Promise<{ proposalNumber: string }> => {
   try {
-    const response = await fetch(getProxyUrl('proposal-reserve'), {
+    const response = await fetch(getApiUrl('proposal/reserve'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -177,7 +179,7 @@ export const reserveProposalNumber = async (token: string): Promise<{ proposalNu
  */
 export const getQuestionnaireToken = async (): Promise<{ token: string }> => {
   try {
-    const response = await fetch(getProxyUrl('questionnaire-token'), {
+    const response = await fetch(getApiUrl('questionnaire/token'), {
       method: 'POST',
       credentials: 'include',
     });
@@ -199,7 +201,7 @@ export const getQuestionnaireToken = async (): Promise<{ token: string }> => {
  */
 export const getPaymentToken = async (): Promise<{ token: string }> => {
   try {
-    const response = await fetch(getProxyUrl('payment-token'), {
+    const response = await fetch(getApiUrl('payment/token'), {
       method: 'POST',
       credentials: 'include',
     });
@@ -219,14 +221,14 @@ export const getPaymentToken = async (): Promise<{ token: string }> => {
 /**
  * Payload para submissão da proposta.
  */
-type ProposalPayload = Record<string, any>;
+type ProposalPayload = Record<string, unknown>;
 
 /**
  * Envia a proposta final para o backend.
  */
 export const submitProposal = async (payload: ProposalPayload) => {
   try {
-    const response = await fetch(getProxyUrl('proposal'), {
+    const response = await fetch(getApiUrl('proposal'), {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',

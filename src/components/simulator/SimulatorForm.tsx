@@ -1,6 +1,6 @@
 // src/components/simulator/SimulatorForm.tsx
 "use client";
-import React, { useEffect, useRef } from 'react';
+import React, { useEffect, useRef } from 'react'; // Adicione useEffect se não estiver lá
 import { useSimulatorStore } from '@/stores/useSimulatorStore';
 import { Step1 } from './steps/Step1';
 import { Step2 } from './steps/Step2';
@@ -14,6 +14,7 @@ import { Step9 } from './steps/Step9';
 import { Step10 } from './steps/Step10';
 import { Step11 } from './steps/Step11';
 import { StepIndicator } from './StepIndicator';
+
 
 // Opcional: mantém os títulos para o <title> da página
 const stepTitles: { [key: number]: string } = {
@@ -39,13 +40,15 @@ const getMainStep = (step: number) => {
 };
 
 export const SimulatorForm = () => {
-  const currentStep = useSimulatorStore((state) => state.currentStep);
+ const currentStep = useSimulatorStore((state) => state.currentStep);
   const formRef = useRef<HTMLDivElement>(null);
   const hydrateFromStorage = useSimulatorStore((state) => state.actions.hydrateFromStorage);
+  const fetchWpNonce = useSimulatorStore((state) => state.actions.fetchWpNonce); // <-- Pegue a ação
   
   useEffect(() => {
     hydrateFromStorage();
-  }, [hydrateFromStorage]);
+    fetchWpNonce(); // <-- Chame a ação para buscar o nonce
+  }, [hydrateFromStorage, fetchWpNonce]);
 
   // Este useEffect continua útil para acessibilidade e título da página
   useEffect(() => {
@@ -78,3 +81,4 @@ export const SimulatorForm = () => {
     </div>
   );
 };
+
