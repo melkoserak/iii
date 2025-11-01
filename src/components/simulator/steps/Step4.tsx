@@ -65,6 +65,8 @@ export const Step4 = () => {
         };
         const data = await getSimulation(payload);
         setInitialCoverages(data);
+
+        console.log('[Step4 fetchSimulation] Raw API Response:', JSON.stringify(data, null, 2));
         
         track('simulation_success', { api_response_payload: data });
 

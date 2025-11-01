@@ -67,14 +67,22 @@ export const Step9 = () => {
         setFormData({ reservedProposalNumber: proposalNumber });
 
         const questionnaireId = findFirstQuestionnaireId();
-        const url = `https://widgetshmg.mag.com.br/questionario-Questionario/v2/responder/${questionnaireId}/Venda/${proposalNumber}/0266e8/efb700?listenForToken=true`;
-        setWidgetUrl(url);
-      } catch (err) {
-        const error = err as Error;
-        setError(error.message || "Não foi possível carregar o questionário.");
-        track('questionnaire_error', { error_message: error.message });
-        setIsLoading(false);
-      }
+  const url = `https://widgetshmg.mag.com.br/questionario-Questionario/v2/responder/${questionnaireId}/Venda/${proposalNumber}/0266e8/efb700?listenForToken=true`;
+  
+  // Adiciona o log aqui
+  console.log("URL do questionário gerada:", {
+    questionnaireId,
+    proposalNumber,
+    url,
+  });
+
+  setWidgetUrl(url);
+} catch (err) {
+  const error = err as Error;
+  setError(error.message || "Não foi possível carregar o questionário.");
+  track('questionnaire_error', { error_message: error.message });
+  setIsLoading(false);
+}
     };
 
     initializeWidget();
